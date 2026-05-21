@@ -2,6 +2,8 @@
 
 Script en Python que **valida** y **convierte** gramáticas libres de contexto a **Forma Normal de Greibach (FNG)** desde la terminal.
 
+> **Guía práctica:** entradas paso a paso, demostraciones y validación en [guias/FNG.md](guias/FNG.md).
+
 ## Ejecución
 
 ```bash

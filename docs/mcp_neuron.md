@@ -1,133 +1,172 @@
-# Neurona McCulloch-Pitts (terminal)
+# Neurona McCulloch-Pitts y modelo extendido
 
-Script en Python que implementa una **neurona artificial de McCulloch y Pitts** (1943): el modelo más simple de unidad de procesamiento con entradas binarias, pesos enteros y una función de activación escalón. Todo el programa se ejecuta, configura y consulta **desde la terminal** (sin interfaz gráfica ni dependencias externas).
+Script en Python que implementa el **autómata de McCulloch y Pitts** (1943) y una **neurona extendida** con sesgo y función sigmoide, orientada a compuertas lógicas y uso didáctico desde la terminal.
 
-## Ejecución rápida
+> **Guía práctica:** entradas paso a paso, demostraciones y validación en [guias/mcp_neuron.md](guias/mcp_neuron.md).
+
+## Ejecución
 
 ```bash
-cd /ruta/al/proyecto
 python3 mcp_neuron.py
 ```
 
-Al iniciar, el script muestra automáticamente la **demo de la compuerta AND** y luego pregunta si deseas entrar al **modo interactivo** para probar otras configuraciones.
+Al iniciar aparece un menú con demos de compuertas, prueba de XOR en red, y modos de configuración manual.
 
-## ¿Qué es una neurona McCulloch-Pitts?
+## Modelo biológico-computacional
 
-Es un modelo binario que:
+### Entrada de señales (dendritas)
 
-1. Recibe un vector de entradas **estrictamente binarias** (solo `0` o `1`).
-2. Calcula la **suma ponderada** (producto punto) entre entradas y pesos.
-3. Compara esa suma con un **umbral** entero.
-4. Devuelve `1` si la suma es **mayor o igual** al umbral; en caso contrario, `0`.
+Las entradas `x1`, `x2`, `x3` representan la estimulación del entorno. En modo **MCP clásico** solo se aceptan valores binarios (`0` o `1`). En modo **extendido** pueden usarse valores reales (por ejemplo intensidades de estímulo).
 
-No incluye **sesgo (bias)** ni **aprendizaje**: los pesos y el umbral se fijan a mano al diseñar la neurona para una función lógica concreta.
+### Sumatoria y umbral / sesgo
 
-### Fórmula
+La neurona agrega las señales ponderadas:
+
+- **MCP clásico:** `suma = Σ (w_i · x_i)`. Si `suma ≥ θ` (umbral), la neurona dispara (`salida = 1`).
+- **Neurona extendida:** `z = Σ (w_i · x_i) + b` (sesgo `b`). El valor `z` modela la intensidad de estimulación antes de la activación.
+
+Equivalencia didáctica:
 
 ```
-activación = Σ (peso_i × entrada_i)
-salida     = 1  si activación ≥ umbral
-           = 0  en caso contrario
+MCP:       dispara si  Σ(w_i · x_i) ≥ θ
+Extendida: dispara si  z = Σ(w_i · x_i) + b ≥ 0   ⟺   θ = -b
 ```
+
+Ejemplo AND: pesos `[1, 1]`, umbral `2` ⟺ pesos `[1.0, 1.0]`, sesgo `-2.0`.
+
+### Función de activación
+
+| Modo | Función | Salida |
+|------|---------|--------|
+| MCP clásico | Escalón con umbral θ | `0` o `1` |
+| Extendida (sigmoide) | `y = 1 / (1 + e^-z)` | Continua en `(0, 1)` |
+| Extendida (escalón) | `y = 1` si `z ≥ 0` | `0.0` o `1.0` |
+
+La sigmoide modela un disparo gradual (señal eléctrica por el axón). Para comparar con lógica binaria se usa **binarización**: `y_binaria = 1` si `y ≥ 0.5`.
 
 ### Pesos
 
-| Valor | Significado habitual |
-|-------|----------------------|
-| `1`   | Conexión excitatoria |
-| `-1`  | Conexión inhibitoria |
+| Valor | Rol habitual |
+|-------|----------------|
+| `1` / `1.0` | Conexión excitatoria |
+| `-1` / `-1.0` | Conexión inhibitoria |
 
-## Flujo del programa
+## Compuertas implementadas
 
-```
-Inicio
-  → Demo compuerta AND (4 combinaciones)
-  → ¿Probar otra neurona? (s/n)
-       → s: modo interactivo (pesos, umbral, entradas)
-       → n: fin
-```
+| Compuerta | MCP (pesos, umbral) | ¿Una neurona? |
+|-----------|---------------------|---------------|
+| AND | `[1, 1]`, θ=2 | Sí |
+| OR | `[1, 1]`, θ=1 | Sí |
+| NOT x1 | `[-1, 0]`, θ=0 | Sí (x2 ignorada) |
+| ANDNOT | `[1, -1]`, θ=1 | Sí |
+| XOR | Red de 3 neuronas | **No** |
 
-## Demo: compuerta AND
+### ANDNOT
 
-La neurona se configura así para una AND de 2 entradas:
-
-| Parámetro | Valor   | Motivo |
-|-----------|---------|--------|
-| Pesos     | `[1, 1]` | Ambas entradas suman cuando están activas |
-| Umbral    | `2`      | Solo con las dos entradas en `1` la suma alcanza 2 |
+`x1 AND NOT x2`: pesos `[1, -1]`, umbral `1`.
 
 | x1 | x2 | Suma | Salida |
 |----|----|------|--------|
-| 0  | 0  | 0    | 0      |
-| 0  | 1  | 1    | 0      |
-| 1  | 0  | 1    | 0      |
-| 1  | 1  | 2    | 1      |
+| 0 | 0 | 0 | 0 |
+| 0 | 1 | -1 | 0 |
+| 1 | 0 | 1 | 1 |
+| 1 | 1 | 0 | 0 |
 
-Salida esperada en terminal:
+### XOR (red de 3 neuronas)
 
-```
---- Demo: compuerta lógica AND (2 entradas) ---
-Pesos: [1, 1]  |  Umbral: 2
-
-Entrada [0, 0]  |  Suma: 0  |  Salida: 0
-Entrada [0, 1]  |  Suma: 1  |  Salida: 0
-Entrada [1, 0]  |  Suma: 1  |  Salida: 0
-Entrada [1, 1]  |  Suma: 2  |  Salida: 1
-```
-
-## Modo interactivo
-
-Responde `s`, `si` o `sí` cuando el programa lo pregunte. Luego:
-
-1. **Pesos:** enteros separados por espacios, por ejemplo `1 1` o `1 1 -1`.
-2. **Umbral:** un entero, por ejemplo `2`.
-3. **Entradas:** en cada prompt `Entradas>`, escribe tantos `0` o `1` como pesos definiste, separados por espacio.
-
-Para salir del bucle de entradas: línea vacía (Enter) o la palabra `salir`.
-
-### Ejemplo: compuerta OR (2 entradas)
+XOR no es linealmente separable: **una sola neurona MCP no puede implementarla**. El script usa esta red:
 
 ```
-¿Desea probar otra neurona? (s/n): s
-Ingrese los pesos (enteros separados por espacio): 1 1
-Ingrese el umbral (entero): 1
-
-Entradas> 0 0
-  Suma: 0  |  Salida: 0
-
-Entradas> 1 1
-  Suma: 2  |  Salida: 1
+x1, x2 ──► N1 [1,-1] θ=1   (x1 AND NOT x2)
+x1, x2 ──► N2 [-1,1] θ=1   (NOT x1 AND x2)
+N1, N2 ──► N3 [1,1]  θ=1   (OR)
 ```
 
-Con umbral `1`, basta que una entrada esté en `1` para que la salida sea `1`.
+| x1 | x2 | N1 | N2 | XOR |
+|----|----|----|----|-----|
+| 0 | 0 | 0 | 0 | 0 |
+| 0 | 1 | 0 | 1 | 1 |
+| 1 | 0 | 1 | 0 | 1 |
+| 1 | 1 | 0 | 0 | 0 |
 
-### Errores habituales
+Use la opción **3** del menú para ver el trazado paso a paso.
 
-El programa no se cierra ante un error de entrada; muestra el mensaje y vuelve a pedir datos:
+## Menú principal
 
-- Entradas con longitud distinta a la de los pesos.
-- Valores distintos de `0` o `1`.
-- Línea de pesos vacía o umbral no numérico (en la configuración inicial).
+```
+=== Autómata McCulloch-Pitts ===
+1. Demos compuertas (MCP clásico)
+2. Demos compuertas (neurona extendida + sigmoide)
+3. Probar XOR (red de 3 neuronas + trazado)
+4. Configurar neurona MCP manualmente
+5. Configurar neurona extendida manualmente
+0. Salir
+```
 
-## Uso programático (clase)
+En las opciones 1 y 2, submenú: AND, OR, NOT, ANDNOT, XOR o todas.
 
-Puedes importar la neurona desde otro módulo Python:
+### Salida modo MCP (ejemplo AND)
+
+```
+Entradas             | Suma | Salida
+x1=0, x2=0           |    0 |      0
+x1=0, x2=1           |    1 |      0
+x1=1, x2=0           |    1 |      0
+x1=1, x2=1           |    2 |      1
+```
+
+### Salida modo extendido (ejemplo AND)
+
+```
+Entradas             |        z |    y_sig | y_bin
+x1=1, x2=1           |   0.0000 |   0.5000 |     1
+```
+
+## Uso programático
 
 ```python
-from mcp_neuron import McCullochPittsNeuron
+from mcp_neuron import (
+    McCullochPittsNeuron,
+    ExtendedNeuron,
+    MCPNetwork,
+    GATE_PRESETS,
+    xor_network_predict,
+)
 
-neuron = McCullochPittsNeuron(weights=[1, 1], threshold=2)
-print(neuron.predict([1, 1]))  # 1
-print(neuron.predict([0, 1]))  # 0
+# MCP clásico
+and_gate = McCullochPittsNeuron([1, 1], 2)
+and_gate.predict([1, 1])  # 1
+
+# Extendida
+neuron = ExtendedNeuron([1.0, 1.0], -2.0, activation="sigmoid")
+z, y = neuron.activate([1.0, 1.0])
+
+# XOR
+xor_network_predict([1, 0])  # 1
+network = MCPNetwork()
+out, (h1, h2) = network.forward([1, 1])
+
+# Presets
+preset = GATE_PRESETS["ANDNOT"]
+preset.mcp_neuron().predict([1, 0])  # 1
 ```
 
-### API
+## API principal
 
-| Método | Descripción |
-|--------|-------------|
-| `__init__(weights, threshold)` | Guarda la lista de pesos enteros y el umbral entero. |
-| `predict(inputs)` | Valida entradas binarias, calcula el producto punto y devuelve `0` o `1`. |
+| Clase / función | Descripción |
+|-----------------|-------------|
+| `McCullochPittsNeuron` | Pesos enteros, umbral, entradas binarias, salida 0/1 |
+| `ExtendedNeuron` | Pesos reales, sesgo, activación `sigmoid` o `step` |
+| `MCPNetwork` | Red fija de 3 neuronas para XOR |
+| `GATE_PRESETS` | Configuraciones AND, OR, NOT, ANDNOT, XOR |
+| `run_gate_demo(name, mode)` | Imprime tabla de verdad (`mcp` o `extended`) |
 
-## Referencia histórica
+## Pruebas
 
-McCulloch y Pitts (1943) demostraron que redes de estas neuronas binarias pueden representar funciones lógicas y, en principio, comportamiento similar al razonamiento formal. Este script es una implementación didáctica de **una sola neurona**, no de una red completa.
+```bash
+python3 -m unittest test_mcp_neuron.py -v
+```
+
+## Referencia
+
+McCulloch y Pitts (1943) modelaron neuronas binarias con umbral. La neurona extendida con sigmoide y sesgo aproxima el comportamiento de unidades posteriores en redes feedforward, manteniendo el MCP clásico como caso didáctico separado.
